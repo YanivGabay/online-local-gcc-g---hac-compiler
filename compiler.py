@@ -14,14 +14,13 @@ from pathlib import Path
 console = Console()
 
 # Configuration Constants
-DOCKER_IMAGE = 'your_dockerhub_username/gcc:8.5.0-22' 
-
+DOCKER_IMAGE = 'yaniv242/hacenv'  # Replace with your actual Docker image name
 WORKDIR_IN_CONTAINER = '/workspace'
 EXECUTABLE_NAME = 'program'  # Default executable name
 
 # Global variable to keep track of the current compilation context
 current_context = {
-    'source_dir': None,
+    'source_dir': os.getcwd(),
     'source_file': None,
     'executable_path': None,
     'compiler': 'gcc'  # Default compiler
@@ -64,7 +63,11 @@ def pull_docker_image(image_name):
 
 def get_c_files(directory):
     """Retrieve all .c and .cpp files in the specified directory."""
-    return [file for file in os.listdir(directory) if file.endswith('.c') or file.endswith('.cpp')]
+    try:
+        return [file for file in os.listdir(directory) if file.endswith('.c') or file.endswith('.cpp')]
+    except FileNotFoundError:
+        console.print(f"[bold red]Error:[/bold red] Directory '{directory}' does not exist.")
+        return []
 
 def compile_program(source_file, compile_flags='', compiler='gcc'):
     """Compile the C/C++ program inside Docker."""
@@ -72,9 +75,7 @@ def compile_program(source_file, compile_flags='', compiler='gcc'):
     source_dir = os.path.dirname(absolute_path)
     source_filename = os.path.basename(absolute_path)
 
-    
     docker_image = DOCKER_IMAGE
-   
 
     docker_cmd = [
         'docker', 'run', '--rm',
@@ -110,7 +111,7 @@ def run_program(program_args, source_dir):
         'docker', 'run', '--rm',
         '-v', f'{source_dir}:{WORKDIR_IN_CONTAINER}',
         '-w', WORKDIR_IN_CONTAINER,
-        DOCKER_IMAGE, 
+        DOCKER_IMAGE,
     ] + args
 
     console.print(f"[blue]Running the program with arguments: {' '.join(program_args)}[/blue]")
@@ -130,7 +131,7 @@ def run_valgrind(program_args, source_dir):
         'docker', 'run', '--rm',
         '-v', f'{source_dir}:{WORKDIR_IN_CONTAINER}',
         '-w', WORKDIR_IN_CONTAINER,
-        DOCKER_IMAGE,  
+        DOCKER_IMAGE,
         'valgrind', '--leak-check=full', '--error-exitcode=1', f'./{EXECUTABLE_NAME}'
     ] + program_args
 
@@ -181,62 +182,73 @@ def display_valgrind_results(result):
         else:
             console.print("[bold red]Valgrind detected errors, but no error messages were captured.[/bold red]")
 
+def select_source_file():
+    """Allow the user to select a source file from the current directory."""
+    c_files = get_c_files(current_context['source_dir'])
+    if not c_files:
+        console.print("[bold red]No C/C++ source files found in the current directory.[/bold red]")
+        return None
+
+    table = Table(show_header=True, header_style="bold magenta", box=box.MINIMAL_DOUBLE_HEAD)
+    table.add_column("No.", style="dim", width=6)
+    table.add_column("Filename", min_width=20)
+
+    for idx, file in enumerate(c_files, 1):
+        table.add_row(str(idx), file)
+
+    console.print(table)
+
+    choices = [str(i) for i in range(1, len(c_files)+1)]
+    choice = Prompt.ask(f"Select a file to compile [1-{len(c_files)}]", choices=choices)
+
+    selected_file = c_files[int(choice)-1]
+    return os.path.join(current_context['source_dir'], selected_file)
+
 def interactive_menu():
     """Display an interactive menu to the user."""
     while True:
-        table = Table(title="C/C++ Compiler Menu", box=box.ROUNDED, show_header=True, header_style="bold magenta")
-        table.add_column("Option", style="dim", width=12)
-        table.add_column("Description")
+        table = Table(title="C/C++ Compiler Menu", box=box.ROUNDED, show_header=False, header_style="bold magenta")
+        table.add_column("Option", style="dim", width=6)
+        table.add_column("Description", min_width=20)
 
         table.add_row("1", "List C/C++ source files")
         table.add_row("2", "Compile a C/C++ program")
         table.add_row("3", "Run the compiled program")
         table.add_row("4", "Run Valgrind on the program")
-        table.add_row("5", "Exit")
+        table.add_row("5", "Change Source Directory")
+        table.add_row("6", "Exit")
 
         console.print(table)
 
-        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4", "5"], default="5")
+        choice = Prompt.ask("Choose an option", choices=["1", "2", "3", "4", "5", "6"], default="6")
 
         if choice == "1":
-            # List C/C++ source files from the current context or prompt for a directory
-            if current_context['source_dir']:
-                c_files = get_c_files(current_context['source_dir'])
-                console.print(f"[bold green]C/C++ Source Files in '{current_context['source_dir']}':[/bold green]")
-            else:
-                # Prompt user to specify a directory to list C/C++ files
-                directory = Prompt.ask("Enter the directory to list C/C++ files", default=os.getcwd())
-                if not os.path.isdir(directory):
-                    console.print(f"[bold red]Error:[/bold red] '{directory}' is not a valid directory.")
-                    continue
-                c_files = get_c_files(directory)
-                console.print(f"[bold green]C/C++ Source Files in '{directory}':[/bold green]")
+            # List C/C++ source files from the current context
+            c_files = get_c_files(current_context['source_dir'])
+            console.print(f"[bold green]C/C++ Source Files in '{current_context['source_dir']}':[/bold green]")
 
             if not c_files:
-                console.print("[bold red]No C/C++ source files found in the specified directory.[/bold red]")
+                console.print("[bold red]No C/C++ source files found in the current directory.[/bold red]")
             else:
+                table_files = Table(show_header=True, header_style="bold magenta", box=box.MINIMAL_DOUBLE_HEAD)
+                table_files.add_column("No.", style="dim", width=6)
+                table_files.add_column("Filename", min_width=20)
+
                 for idx, file in enumerate(c_files, 1):
-                    console.print(f"{idx}. {file}")
+                    table_files.add_row(str(idx), file)
+
+                console.print(table_files)
 
         elif choice == "2":
             # Compile a C/C++ program
-            # Prompt user to specify the path to the C/C++ file
-            source_file = Prompt.ask("Enter the full path to the C/C++ source file", default="")
-            if not source_file:
-                console.print("[bold red]Error:[/bold red] No file path provided.")
-                continue
-            source_file = os.path.expanduser(source_file)
-            if not os.path.isfile(source_file):
-                console.print(f"[bold red]Error:[/bold red] File '{source_file}' does not exist.")
-                continue
-            if not (source_file.endswith('.c') or source_file.endswith('.cpp')):
-                console.print("[bold red]Error:[/bold red] The specified file is not a C/C++ source file (*.c or *.cpp).")
+            selected_file = select_source_file()
+            if not selected_file:
                 continue
 
             # Determine the compiler based on file extension
-            if source_file.endswith('.c'):
+            if selected_file.endswith('.c'):
                 compiler = 'gcc'
-            elif source_file.endswith('.cpp'):
+            elif selected_file.endswith('.cpp'):
                 compiler = 'g++'
             else:
                 console.print("[bold red]Error:[/bold red] Unsupported file extension.")
@@ -246,13 +258,8 @@ def interactive_menu():
             compile_flags = Prompt.ask("Enter compilation flags (default: -Wall)", default="-Wall")
 
             # Compile the program
-            compile_result = compile_program(source_file, compile_flags, compiler)
+            compile_result = compile_program(selected_file, compile_flags, compiler)
             display_compile_results(compile_result)
-
-            if compile_result.returncode != 0:
-                console.print("[bold red]Compilation failed. Please fix the errors and try again.[/bold red]")
-            else:
-                console.print("[bold green]Compilation succeeded.[/bold green]")
 
         elif choice == "3":
             # Run the compiled program
@@ -283,6 +290,17 @@ def interactive_menu():
             display_valgrind_results(valgrind_result)
 
         elif choice == "5":
+            # Change Source Directory
+            new_directory = Prompt.ask("Enter the new source directory path", default=os.getcwd())
+            if not os.path.isdir(new_directory):
+                console.print(f"[bold red]Error:[/bold red] '{new_directory}' is not a valid directory.")
+                continue
+            current_context['source_dir'] = os.path.abspath(new_directory)
+            current_context['source_file'] = None
+            current_context['executable_path'] = None
+            console.print(f"[bold green]Source directory changed to '{new_directory}'.[/bold green]")
+
+        elif choice == "6":
             # Exit the script
             console.print("[bold blue]Goodbye![/bold blue]")
             sys.exit(0)
@@ -294,9 +312,8 @@ def main():
     # Check Docker installation and status
     check_docker_installed()
     check_docker_running()
-    # Pull both C and C++ Docker images
+    # Pull Docker image
     pull_docker_image(DOCKER_IMAGE)
-
 
     # Start interactive menu
     interactive_menu()
