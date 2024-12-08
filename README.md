@@ -29,7 +29,7 @@ Happy coding! 🎉
 
 
 ## Usage
-1. **Download the Executable**: If you prefer not to install dependencies, download the provided executable file from [this link](https://github.com/YanivGabay/online-local-gcc-g---hac-compiler/releases/tag/1.0.0) and run the `.exe` file.
+1. **Download the Executable**: If you prefer not to install dependencies, download the provided executable file from [Github releases](https://github.com/YanivGabay/online-local-gcc-g---hac-compiler/releases/tag/1.0.0) and run the `.exe` file.
 2. **Clone the Repository**: Alternatively, clone the repository and run the Python script yourself.
 
 This project aims to streamline the coding and testing process for students, providing a seamless and efficient way to ensure their code works correctly in the required environment.
