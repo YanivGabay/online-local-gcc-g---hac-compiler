@@ -1,6 +1,16 @@
 # Online Local GCC/G++ HAC Compiler
 
-This project is designed for students at Hadassah Academic College who need to work in a CentOS 8 (or Rocky Linux) environment using GCC 8.5.0-22. Often, students face difficulties or discomfort when connecting to the college servers remotely. This project provides a solution by allowing students to compile and test their code in an environment identical to the college's setup, locally on their own machines.
+This project is designed for students at **Hadassah Academic College** who need to work in a **CentOS 8** (or **Rocky Linux**) environment using **GCC 8.5.0-22**. 🖥️
+
+Often, students face difficulties or discomfort when connecting to the college servers remotely. This project provides a solution by allowing students to compile and test their code in an environment identical to the college's setup, locally on their own machines. 🚀
+
+With this setup, you can:
+
+- **Compile and test code** just like on the college servers.
+- **Avoid remote connection issues** and work comfortably from your own machine.
+- **Ensure compatibility** with the college's environment.
+
+Happy coding! 🎉
 
 ## Features
 
