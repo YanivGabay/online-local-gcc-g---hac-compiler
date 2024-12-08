@@ -17,10 +17,9 @@ This project is designed for students at Hadassah Academic College who need to w
   - **Venv**: Install the `venv` module by running `python -m venv venv` in the project directory.
   - **Instal -r requirements.txt**: Install the required dependencies by running `pip install -r requirements.txt`.
 
-  
-## Usage
 
-1. **Download the Executable**: If you prefer not to install dependencies, download the provided executable file.
+## Usage
+1. **Download the Executable**: If you prefer not to install dependencies, download the provided executable file from [this link](https://github.com/YanivGabay/online-local-gcc-g---hac-compiler/releases/tag/1.0.0) and run the `.exe` file.
 2. **Clone the Repository**: Alternatively, clone the repository and run the Python script yourself.
 
 This project aims to streamline the coding and testing process for students, providing a seamless and efficient way to ensure their code works correctly in the required environment.
