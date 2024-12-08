@@ -5,3 +5,10 @@
 
 # Ignore virtual environment directories
 venv/
+
+# Ignore PyInstaller build directories
+/dist/
+/build/
+*.spec
+
+*.ico
