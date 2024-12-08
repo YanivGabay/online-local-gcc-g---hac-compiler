@@ -309,6 +309,17 @@ def interactive_menu():
             console.print("[bold red]Invalid option. Please choose a valid option.[/bold red]")
 
 def main():
+  
+    welcome_message = (
+        "\n"
+        "========================================\n"
+        " Welcome to the Online GCC/G++ Compiler\n"
+        "    Version: 8.5.0-22\n"
+        " Ensure that Docker Desktop is installed and running.\n"
+        "========================================\n"
+    )
+    console.print(welcome_message, style="bold green")
+
     # Check Docker installation and status
     check_docker_installed()
     check_docker_running()
